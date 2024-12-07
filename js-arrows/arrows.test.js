@@ -165,10 +165,47 @@ describe("arras.updateValue()", () => {
 })
 
 describe("arras.bang()", () => {
-  it("should do good things", () => {
     arras.setLogFunction(console.log);
     arras.setMode("sequential");
+    arras.setMatrices(
+        [
+            {
+                owner: "Mark",
+                matrix: [
+                    [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
+                    [{name: "David", value: ""}, {name: "Lavender", value: ""}]
+                ]
+            },
+            {
+                owner: "Rian",
+                matrix: [
+                    [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
+                    [{name: "David", value: ""}, {name: "Lavender", value: ""}]
+                ]
+            },
+            {
+                owner: "David",
+                matrix: [
+                    [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
+                    [{name: "David", value: ""}, {name: "Lavender", value: ""}]
+                ]
+            },
+            {
+                owner: "Lavender",
+                matrix: [
+                    [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
+                    [{name: "David", value: ""}, {name: "Lavender", value: ""}]
+                ]
+            },
+        ]
+    );
+    arras.addSeed("Lavender", "point_left");
 
-
-  })
+    it("should do good things", () => {
+        console.log(arras.outlet(0, arras.getValsArray()));
+        console.log(arras.getMatrices().flatMap(m => m.matrix).flatMap(m => m));
+        arras.bang();
+        console.log(arras.outlet(0, arras.getValsArray()));
+        console.log(arras.getMatrices().flatMap(m => m.matrix).flatMap(m => m));
+    })
 })

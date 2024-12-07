@@ -10,8 +10,8 @@ var userList = [
     "Ben",
 ]
 
-var gridHeight = 3;
-var gridWidth = 3;
+var gridHeight = 2;
+var gridWidth = 2;
 
 var point_values = [
     "point_left",
@@ -26,6 +26,13 @@ var lastToChange = "";
 
 let matrices = []
 
+var post = null;
+var outlet = (num, valsArray) => {
+    return valsArray;
+};
+
+exports.outlet = outlet;
+
 function init() {
     post("init...")
     matrices = [];
@@ -35,9 +42,23 @@ function init() {
 
     const valsArray = getValsArray();
 
-    post(" ");
     outlet(0, valsArray);
 }
+
+function initWithSize(size) {
+    post("init with size "+size+"...")
+    matrices = [];
+    const newArray = userList.slice(0, size);
+    newArray.map((name) => {
+        matrices = [...matrices, createIdenticalMatrix(name, newArray)];
+    });
+
+    const valsArray = getValsArray();
+
+    outlet(0, valsArray);
+}
+
+exports.initWithSize = initWithSize;
 
 function initBFP() {
     post("init Ben Fletcher Paradox...")
@@ -46,7 +67,6 @@ function initBFP() {
 
     const valsArray = getValsArray();
 
-    post(" ");
     outlet(0, valsArray);
 }
 
@@ -59,19 +79,28 @@ function initIdentical() {
 
     const valsArray = getValsArray();
 
-    post(" ");
     outlet(0, valsArray);
 }
 
 function addSeed(name, value) {
-    matrices = updateValue(name, value, matrices);
+    const currentIndex = point_values.indexOf(value);
+    let valueToSet;
+
+    if (currentIndex === 0) {
+        valueToSet = point_values[3];
+    } else {
+        valueToSet = point_values[currentIndex - 1];
+    }
+
+    matrices = updateValue(name, valueToSet, matrices);
 
     const valsArray = getValsArray();
     lastToChange = name;
 
-    post(" ");
     outlet(0, valsArray);
 }
+
+exports.addSeed = addSeed;
 
 function setMode(newMode) {
     if (newMode === "random" || newMode === "sequential") {
@@ -82,6 +111,12 @@ function setMode(newMode) {
 }
 
 exports.setMode = setMode;
+
+function getMatrices() {
+    return matrices;
+}
+
+exports.getMatrices = getMatrices;
 
 var prevValsArray = [...Array(81).fill(0)];
 
@@ -106,19 +141,19 @@ function getValsArray() {
     });
 }
 
-var log = post
+exports.getValsArray = getValsArray;
 
 function setLogFunction(newLog) {
-    log = newLog;
+    post = newLog;
 }
 
 exports.setLogFunction = setLogFunction;
 
 function bang() {
-    for (let i = 0; i < matrices.length; i++) {
+    for (let i = 0; i < matrices.length - 1; i++) {
         const matrix = matrices[i];
         const {ownerPosition, ownerValue} = getOwnerPositionAndValue(matrix);
-
+        post({matrixOwner: matrices[i].owner, ownerPosition: ownerPosition, ownerValue: ownerValue});
         const shouldUpdateOwner = shouldWeUpdateOwner(matrix, ownerPosition);
 
         if (shouldUpdateOwner) {
@@ -132,9 +167,10 @@ function bang() {
         post("stable state reached");
     }
 
-    post(" ");
     outlet(0, valsArray);
 }
+
+exports.bang = bang;
 
 function createRandomMatrix(owner) {
     const array = [...userList];
@@ -239,17 +275,21 @@ function createBFPMatrix() {
     ];
 }
 
-function createIdenticalMatrix(owner) {
-    const array = [...userList];
+function createIdenticalMatrix(owner, userList) {
     return {
         owner,
         matrix: [
-            [{name: array[0], value: ""}, {name: array[1], value: ""}, {name: array[2], value: ""}],
-            [{name: array[3], value: ""}, {name: array[4], value: ""}, {name: array[5], value: ""}],
-            [{name: array[6], value: ""}, {name: array[7], value: ""}, {name: array[8], value: ""}],
+            [{name: userList[0], value: ""}, {name: userList[1], value: ""}],
+            [{name: userList[2], value: ""}, {name: userList[3], value: ""}],
         ]
     }
 }
+
+function setMatrices(newMatrices) {
+    matrices = newMatrices;
+}
+
+exports.setMatrices = setMatrices;
 
 function updateValue(name, value, matrices) {
     let newCellValue = getCellValue(value)
@@ -338,26 +378,49 @@ function listAdjacentCells(ownerPosition) {
     });
 }
 
-function toTheLeftPointingAtYou(cell, ownerPosition, matrix) {
-    return cell[0] === ownerPosition[0] - 1 &&
-        cell[1] === ownerPosition[1] &&
-        matrix.matrix[cell[0]][cell[1]].value === "point_right";
-}
-
-function toTheRightPointingAtYou(cell, ownerPosition, matrix) {
-    return cell[0] === ownerPosition[0] + 1 &&
-        cell[1] === ownerPosition[1] &&
-        matrix.matrix[cell[0]][cell[1]].value === "point_left";
-}
-
 function abovePointingAtYou(cell, ownerPosition, matrix) {
-    return cell[0] === ownerPosition[0] &&
-        cell[1] === ownerPosition[1] - 1 &&
+    const a = cell[0] === ownerPosition[0] - 1 &&
+        cell[1] === ownerPosition[1] &&
         matrix.matrix[cell[0]][cell[1]].value === "point_down";
+
+    if (a) {
+        console.log({
+            cell: cell,
+            ownerPosition: ownerPosition
+        })
+        console.log("abovePointingAtYou", a)
+    }
+    return a
 }
 
 function belowPointingAtYou(cell, ownerPosition, matrix) {
-    return cell[0] === ownerPosition[0] &&
-        cell[1] === ownerPosition[1] + 1 &&
+    const a = cell[0] === ownerPosition[0] + 1 &&
+        cell[1] === ownerPosition[1] &&
         matrix.matrix[cell[0]][cell[1]].value === "point_up";
+
+    if (a) {
+        console.log("belowPointingAtYou", a)
+    }
+    return a
+}
+
+function toTheLeftPointingAtYou(cell, ownerPosition, matrix) {
+    const a = cell[0] === ownerPosition[0] &&
+        cell[1] === ownerPosition[1] - 1 &&
+        matrix.matrix[cell[0]][cell[1]].value === "point_right";
+
+    if (a) {
+        console.log("toTheLeftPointingAtYou", a)
+    }
+    return a
+}
+
+function toTheRightPointingAtYou(cell, ownerPosition, matrix) {
+    const a = cell[0] === ownerPosition[0] &&
+        cell[1] === ownerPosition[1] + 1 &&
+        matrix.matrix[cell[0]][cell[1]].value === "point_left";
+    if (a) {
+        console.log("toTheRightPointingAtYou", a)
+    }
+    return a
 }
