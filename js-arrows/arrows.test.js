@@ -167,38 +167,39 @@ describe("arras.updateValue()", () => {
 describe("arras.bang()", () => {
     arras.setLogFunction(console.log);
     arras.setMode("sequential");
-    arras.setMatrices(
-        [
-            {
-                owner: "Mark",
-                matrix: [
-                    [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
-                    [{name: "David", value: ""}, {name: "Lavender", value: ""}]
-                ]
-            },
-            {
-                owner: "Rian",
-                matrix: [
-                    [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
-                    [{name: "David", value: ""}, {name: "Lavender", value: ""}]
-                ]
-            },
-            {
-                owner: "David",
-                matrix: [
-                    [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
-                    [{name: "David", value: ""}, {name: "Lavender", value: ""}]
-                ]
-            },
-            {
-                owner: "Lavender",
-                matrix: [
-                    [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
-                    [{name: "David", value: ""}, {name: "Lavender", value: ""}]
-                ]
-            },
-        ]
-    );
+    arras.initWithSize(2);
+    // arras.setMatrices(
+    //     [
+    //         {
+    //             owner: "Mark",
+    //             matrix: [
+    //                 [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
+    //                 [{name: "David", value: ""}, {name: "Lavender", value: ""}]
+    //             ]
+    //         },
+    //         {
+    //             owner: "Rian",
+    //             matrix: [
+    //                 [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
+    //                 [{name: "David", value: ""}, {name: "Lavender", value: ""}]
+    //             ]
+    //         },
+    //         {
+    //             owner: "David",
+    //             matrix: [
+    //                 [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
+    //                 [{name: "David", value: ""}, {name: "Lavender", value: ""}]
+    //             ]
+    //         },
+    //         {
+    //             owner: "Lavender",
+    //             matrix: [
+    //                 [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
+    //                 [{name: "David", value: ""}, {name: "Lavender", value: ""}]
+    //             ]
+    //         },
+    //     ]
+    // );
     arras.addSeed("Lavender", "point_left");
 
     it("should do good things", () => {
@@ -207,5 +208,42 @@ describe("arras.bang()", () => {
         arras.bang();
         console.log(arras.outlet(0, arras.getValsArray()));
         console.log(arras.getMatrices().flatMap(m => m.matrix).flatMap(m => m));
+    })
+})
+
+describe("arras.createIdenticalMatrix()", () => {
+    it("should create a matrix with 4 users", () => {
+        const matrix = arras.createIdenticalMatrix(
+            "David",
+            ["David", "Mark", "Rian", "Lavender"],
+            2,
+            2
+        );
+
+        expect(matrix).toStrictEqual({
+            owner: "David",
+            matrix: [
+                [{name: "David", value: ""}, {name: "Mark", value: ""}],
+                [{name: "Rian", value: ""}, {name: "Lavender", value: ""}]
+            ]
+        });
+    })
+
+    it("should create a matrix with 9 users", () => {
+        const matrix = arras.createIdenticalMatrix(
+            "David",
+            ["David", "Mark", "Rian", "Lavender", "Aidan", "Guillaume", "Camp Helper", "Ben", "Aleksi"],
+            3,
+            3
+        );
+
+        expect(matrix).toStrictEqual({
+            owner: "David",
+            matrix: [
+                [{name: "David", value: ""}, {name: "Mark", value: ""}, {name: "Rian", value: ""}],
+                [{name: "Lavender", value: ""}, {name: "Aidan", value: ""}, {name: "Guillaume", value: ""}],
+                [{name: "Camp Helper", value: ""}, {name: "Ben", value: ""}, {name: "Aleksi", value: ""}]
+            ]
+        });
     })
 })

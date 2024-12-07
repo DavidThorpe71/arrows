@@ -8,10 +8,17 @@ var userList = [
     "Aleksi",
     "Camp Helper",
     "Ben",
+    "Giacomo",
+    "Anton",
+    "John",
+    "Yasunao",
+    "Keith",
+    "Roland",
+    "Max",
 ]
 
-var gridHeight = 2;
-var gridWidth = 2;
+var gridHeight = 0;
+var gridWidth = 0;
 
 var point_values = [
     "point_left",
@@ -22,20 +29,47 @@ var point_values = [
 
 var mode = "random";
 
-var lastToChange = "";
-
 let matrices = []
 
+var prevValsArray = [];
+
+// Stuff for testing
 var post = null;
+
 var outlet = (num, valsArray) => {
     return valsArray;
 };
 
+function getMatrices() {
+    return matrices;
+}
+
+function setMatrices(newMatrices) {
+    matrices = newMatrices;
+}
+
+function setLogFunction(newLog) {
+    post = newLog;
+}
+
 exports.outlet = outlet;
+exports.initWithSize = initWithSize;
+exports.addSeed = addSeed;
+exports.setMode = setMode;
+exports.getMatrices = getMatrices;
+exports.getValsArray = getValsArray;
+exports.setLogFunction = setLogFunction;
+exports.bang = bang;
+exports.createIdenticalMatrix = createMatrix;
+exports.setMatrices = setMatrices;
+exports.updateValue = updateValue;
+// End of testing stuff
+
 
 function init() {
     post("init...")
     matrices = [];
+    prevValsArray = [...Array(userList.length*userList.length).fill(0)];
     userList.map((name) => {
         matrices = [...matrices, createRandomMatrix(name)];
     });
@@ -46,19 +80,24 @@ function init() {
 }
 
 function initWithSize(size) {
-    post("init with size "+size+"...")
+    post("init with size: "+size+" * "+size+"...")
+
     matrices = [];
-    const newArray = userList.slice(0, size);
+
+    gridWidth = size;
+    gridHeight = size;
+
+    prevValsArray = [...Array(gridWidth*gridHeight).fill(0)];
+
+    const newArray = userList.slice(0, size*size);
     newArray.map((name) => {
-        matrices = [...matrices, createIdenticalMatrix(name, newArray)];
+        matrices = [...matrices, createMatrix(name, newArray)];
     });
 
     const valsArray = getValsArray();
 
     outlet(0, valsArray);
 }
-
-exports.initWithSize = initWithSize;
 
 function initBFP() {
     post("init Ben Fletcher Paradox...")
@@ -74,7 +113,7 @@ function initIdentical() {
     post("init identical...")
     matrices = [];
     userList.map((name) => {
-        matrices = [...matrices, createIdenticalMatrix(name)];
+        matrices = [...matrices, createMatrix(name)];
     });
 
     const valsArray = getValsArray();
@@ -95,12 +134,9 @@ function addSeed(name, value) {
     matrices = updateValue(name, valueToSet, matrices);
 
     const valsArray = getValsArray();
-    lastToChange = name;
 
     outlet(0, valsArray);
 }
-
-exports.addSeed = addSeed;
 
 function setMode(newMode) {
     if (newMode === "random" || newMode === "sequential") {
@@ -109,16 +145,6 @@ function setMode(newMode) {
         mode = "random";
     }
 }
-
-exports.setMode = setMode;
-
-function getMatrices() {
-    return matrices;
-}
-
-exports.getMatrices = getMatrices;
-
-var prevValsArray = [...Array(81).fill(0)];
 
 function getValsArray() {
     return matrices.flatMap((matrix) => {
@@ -141,14 +167,6 @@ function getValsArray() {
     });
 }
 
-exports.getValsArray = getValsArray;
-
-function setLogFunction(newLog) {
-    post = newLog;
-}
-
-exports.setLogFunction = setLogFunction;
-
 function bang() {
     for (let i = 0; i < matrices.length - 1; i++) {
         const matrix = matrices[i];
@@ -170,9 +188,7 @@ function bang() {
     outlet(0, valsArray);
 }
 
-exports.bang = bang;
-
-function createRandomMatrix(owner) {
+function createRandomMatrix(owner, gridWidth, gridHeight) {
     const array = [...userList];
     let currentIndex = array.length;
 
@@ -188,14 +204,7 @@ function createRandomMatrix(owner) {
             array[randomIndex], array[currentIndex]];
     }
 
-    return {
-        owner,
-        matrix: [
-            [{name: array[0], value: ""}, {name: array[1], value: ""}, {name: array[2], value: ""}],
-            [{name: array[3], value: ""}, {name: array[4], value: ""}, {name: array[5], value: ""}],
-            [{name: array[6], value: ""}, {name: array[7], value: ""}, {name: array[8], value: ""}],
-        ]
-    }
+    return createMatrix(owner, array, gridWidth, gridHeight);
 }
 
 function createBFPMatrix() {
@@ -275,21 +284,22 @@ function createBFPMatrix() {
     ];
 }
 
-function createIdenticalMatrix(owner, userList) {
+function createMatrix(owner, userList, gridWidth, gridHeight) {
+    let matrix = [];
+
+    for (let i = 0; i < gridHeight; i++) {
+        let row = [];
+        for(let j = 0; j < gridWidth; j++) {
+            row.push({name: userList[(i*gridWidth)+j], value: ""});
+        }
+        matrix.push(row);
+    }
+
     return {
         owner,
-        matrix: [
-            [{name: userList[0], value: ""}, {name: userList[1], value: ""}],
-            [{name: userList[2], value: ""}, {name: userList[3], value: ""}],
-        ]
+        matrix
     }
 }
-
-function setMatrices(newMatrices) {
-    matrices = newMatrices;
-}
-
-exports.setMatrices = setMatrices;
 
 function updateValue(name, value, matrices) {
     let newCellValue = getCellValue(value)
@@ -307,8 +317,6 @@ function updateValue(name, value, matrices) {
         return matrix;
     });
 }
-
-exports.updateValue = updateValue;
 
 function getCellValue(value) {
     if (mode === "random") {
