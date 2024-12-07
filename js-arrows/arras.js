@@ -28,25 +28,49 @@ let matrices = []
 
 function init() {
     post("init...")
+    matrices = [];
     userList.map((name) => {
         matrices = [...matrices, createRandomMatrix(name)];
     });
+
+    const valsArray = getValsArray();
+
+    post(" ");
+    outlet(0, valsArray);
 }
 
 function initBFP() {
     post("init Ben Fletcher Paradox...")
+    matrices = [];
     matrices = createBFPMatrix();
+
+    const valsArray = getValsArray();
+
+    post(" ");
+    outlet(0, valsArray);
 }
 
 function initIdentical() {
     post("init identical...")
+    matrices = [];
     userList.map((name) => {
         matrices = [...matrices, createIdenticalMatrix(name)];
     });
+
+    const valsArray = getValsArray();
+
+    post(" ");
+    outlet(0, valsArray);
 }
 
 function addSeed(name, value) {
     matrices = updateValue(name, value, matrices);
+
+    const valsArray = getValsArray();
+    lastToChange = name;
+
+    post(" ");
+    outlet(0, valsArray);
 }
 
 function setMode(newMode) {
@@ -57,21 +81,12 @@ function setMode(newMode) {
     }
 }
 
+exports.setMode = setMode;
+
 var prevValsArray = [...Array(81).fill(0)];
 
-function bang() {
-    for (let i = 0; i < matrices.length; i++) {
-        const matrix = matrices[i];
-        const ownerPosition = getOwnerPosition(matrix);
-
-        const shouldUpdateOwner = shouldWeUpdateOwner(matrix, ownerPosition, matrix.owner);
-
-        if (shouldUpdateOwner) {
-            matrices = updateValue(matrix.owner, null, matrices);
-        }
-    }
-
-    const valsArray = matrices.flatMap((matrix) => {
+function getValsArray() {
+    return matrices.flatMap((matrix) => {
         return matrix.matrix.flatMap((row) => {
             return row.flatMap((cell) => {
                 switch (cell.value) {
@@ -89,12 +104,35 @@ function bang() {
             });
         });
     });
+}
+
+var log = post
+
+function setLogFunction(newLog) {
+    log = newLog;
+}
+
+exports.setLogFunction = setLogFunction;
+
+function bang() {
+    for (let i = 0; i < matrices.length; i++) {
+        const matrix = matrices[i];
+        const {ownerPosition, ownerValue} = getOwnerPositionAndValue(matrix);
+
+        const shouldUpdateOwner = shouldWeUpdateOwner(matrix, ownerPosition);
+
+        if (shouldUpdateOwner) {
+            matrices = updateValue(matrix.owner, ownerValue, matrices);
+        }
+    }
+
+    const valsArray = getValsArray();
 
     if (valsArray.toString() === prevValsArray.toString()) {
         post("stable state reached");
     }
-    prevValsArray = valsArray;
 
+    post(" ");
     outlet(0, valsArray);
 }
 
@@ -214,17 +252,13 @@ function createIdenticalMatrix(owner) {
 }
 
 function updateValue(name, value, matrices) {
+    let newCellValue = getCellValue(value)
+
     return matrices.map((matrix) => {
         matrix.matrix.map((row) => {
             row.map((cell) => {
                 if (cell.name === name) {
-                    if (value) {
-                        cell.value = value
-                        lastToChange = cell.name;
-                    } else {
-                        cell.value = getCellValue(cell.value);
-                        lastToChange = cell.name;
-                    }
+                    cell.value = newCellValue
                 }
                 return cell
             })
@@ -233,6 +267,8 @@ function updateValue(name, value, matrices) {
         return matrix;
     });
 }
+
+exports.updateValue = updateValue;
 
 function getCellValue(value) {
     if (mode === "random") {
@@ -249,21 +285,25 @@ function getCellValue(value) {
     }
 }
 
-function getOwnerPosition(matrix) {
-    let ri = 0, ci = 0;
+function getOwnerPositionAndValue(matrix) {
+    let ri = 0, ci = 0, value = "";
     matrix.matrix.map((row, rowIndex) => {
         row.map((cell, cellIndex) => {
             if (cell.name === matrix.owner) {
                 ri = rowIndex
                 ci = cellIndex;
+                value = cell.value
             }
         });
     });
 
-    return [ri, ci];
+    return {
+        ownerPosition: [ri, ci],
+        ownerValue: value
+    };
 }
 
-function shouldWeUpdateOwner(matrix, ownerPosition, owner) {
+function shouldWeUpdateOwner(matrix, ownerPosition) {
     const adjacentCells = listAdjacentCells(ownerPosition);
 
     for (let i = 0; i < adjacentCells.length; i++) {
@@ -283,9 +323,8 @@ function shouldWeUpdateOwner(matrix, ownerPosition, owner) {
             return true
         }
     }
-    post("last to change: " + lastToChange);
-    post("owner: " + owner);
-    return lastToChange === owner;
+
+    return false;
 }
 
 function listAdjacentCells(ownerPosition) {

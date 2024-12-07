@@ -229,24 +229,3 @@ console.log(matrices[5].owner, matrices[5].matrix);
 console.log(matrices[6].owner, matrices[6].matrix);
 console.log(matrices[7].owner, matrices[7].matrix);
 console.log(matrices[8].owner, matrices[8].matrix);
-
-const everything = {
-    run,
-    updateMatrices,
-    userList,
-    users,
-    matrices,
-    createUser,
-    createRandomMatrix,
-    createFixedMatrix,
-    updateValue,
-    getOwnerPosition,
-    listAdjacentCells,
-    toTheLeftPointingAtYou,
-    toTheRightPointingAtYou,
-    abovePointingAtYou,
-    belowPointingAtYou,
-    shouldWeUpdateOwner,
-    point_values,
-}
-exports.everything = everything;
