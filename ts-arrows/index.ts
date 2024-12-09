@@ -17,21 +17,23 @@ function setLogFunction(newLog: any) {
     post = newLog;
 }
 
-exports.outlet = outlet;
-exports.initRandomWithSize = initRandomWithSize;
-exports.initWithSize = initWithSize;
-exports.addSeed = addSeed;
-exports.setMode = setMode;
-exports.getMatrices = getMatrices;
-exports.getValsArray = getValsArray;
-exports.setLogFunction = setLogFunction;
-exports.bang = bang;
-exports.createIdenticalMatrix = createMatrix;
-exports.createMatrix = createMatrix;
-exports.setMatrices = setMatrices;
-exports.updateValue = updateNamedUserCellValue;
-exports.toTheLeftPointingAtYou = toTheLeftPointingAtYou;
+export {
+    initRandomWithSize,
+    initWithSize,
+    addSeed,
+    setMode,
+    getMatrices,
+    getValsArray,
+    setLogFunction,
+    bang,
+    createMatrix,
+    setMatrices,
+    updateNamedUserCellValue,
+    toTheLeftPointingAtYou,
+};
 // End of testing stuff
+
+
 
 
 var userList = [
@@ -70,6 +72,79 @@ var matrices: any[] = []
 var prevValsArray: number[] = [];
 
 var usersUpdatedOnPreviousBang: boolean[] = [];
+
+interface banger {
+    (): void;
+}
+
+interface seeder {
+    (name: string, value: string): void;
+}
+
+type matrixType = "random" | "bfp" | "fixed";
+
+type matrix = {
+    owner: string,
+    position: [number, number],
+    value: string,
+    adjacentCells: number[][],
+    currentlyPointingAtYou: boolean[],
+    matrix: {
+        name: string,
+        value: string
+    }[][]
+}
+
+class Arrows {
+    private banger: banger;
+    private seeder: seeder;
+    private matrices: matrix[];
+    private mode: string = "random";
+
+    constructor(matrixType: matrixType, size: number, userList: string[], bang: banger, seed: seeder) {
+        this.banger = bang;
+        this.seeder = seed;
+
+        const userListSlice = userList.slice(0, size);
+
+        let matrices: matrix[] = [];
+
+        for (let i = 0; i < userListSlice.length; i++) {
+            if (matrixType === "random") {
+                matrices = [...matrices, createRandomMatrix(userListSlice[i], userListSlice, gridWidth, gridHeight)];
+            }
+
+            if (matrixType === "fixed") {
+                matrices = [...matrices, createMatrix(userListSlice[i], userListSlice, gridWidth, gridHeight)];
+            }
+
+            // if (matrixType === "bfp") {
+            //     matrices = createBFPMatrix();
+            // }
+        }
+
+        this.matrices = matrices;
+        userListSlice.map((name) => {
+            post(name)
+        });
+    }
+
+    public bang() {
+        this.banger();
+    }
+
+    public seed(name: string, value: string) {
+        this.seeder(name, value);
+    }
+
+    public setMode(newMode: string) {
+        if (newMode === "random" || newMode === "sequential") {
+            this.mode = newMode;
+        } else {
+            this.mode = "random";
+        }
+    }
+}
 
 function initRandomWithSize(size: string) {
     post("init with size: "+size+" * "+size+"...")
@@ -310,17 +385,7 @@ function createBFPMatrix() {
     ];
 }
 
-type matrix = {
-    owner: string,
-    position: number[],
-    value: string,
-    adjacentCells: number[][],
-    currentlyPointingAtYou: boolean[],
-    matrix: {
-        name: string,
-        value: string
-    }[][]
-}
+
 
 function createMatrix(owner: string, userList: string[], gridWidth: number, gridHeight: number): matrix {
     let matrix = [];
