@@ -1,5 +1,5 @@
 
-const arras = require("./arras");
+const arras = require("./arrows");
 
 // describe("listAdjacentCells", () => {
 //     it("should list adjacent cells, when owner on the top row", () => {
@@ -19,13 +19,14 @@ const arras = require("./arras");
 describe("toTheLeftPointingAtYou", () => {
     it("should return true, when the cell to the left is pointing at you", () => {
         const matrix = {
+            position: [0,1],
             matrix: [
-                [{value: "point_right"}, {value: ""},{value: ""}],
-                [{value: ""}, {value: ""},{value: ""}],
-                [{value: ""}, {value: ""},{value: ""}],
+                [{value: "point_right"}, {value: ""}],
+                [{value: ""}, {value: ""}],
+                [{value: ""}, {value: ""}],
             ]
         }
-        expect(arrows.everything.toTheLeftPointingAtYou([0,0], [1,0], matrix)).toBe(true);
+        expect(arras.toTheLeftPointingAtYou([0,0], matrix)).toBe(true);
     });
 })
 
@@ -166,47 +167,53 @@ describe("arras.updateValue()", () => {
 
 describe("arras.bang()", () => {
     arras.setLogFunction(console.log);
-    arras.setMode("sequential");
+    arras.setMode("random");
     arras.initWithSize(2);
     // arras.setMatrices(
     //     [
     //         {
     //             owner: "Mark",
-    //             matrix: [
-    //                 [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
-    //                 [{name: "David", value: ""}, {name: "Lavender", value: ""}]
-    //             ]
+    //              matrix: [
+    //                     [{name: "Mark", value: ""}, {name: "David", value: ""}],
+    //                    [{name: "Rian", value: ""}, {name: "Lavender", value: ""}]
+    //                 ]
     //         },
     //         {
     //             owner: "Rian",
     //             matrix: [
-    //                 [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
-    //                 [{name: "David", value: ""}, {name: "Lavender", value: ""}]
+    //                 [{name: "Mark", value: ""}, {name: "David", value: ""}],
+    //                 [{name: "Rian", value: ""}, {name: "Lavender", value: ""}]
     //             ]
     //         },
     //         {
     //             owner: "David",
     //             matrix: [
-    //                 [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
-    //                 [{name: "David", value: ""}, {name: "Lavender", value: ""}]
-    //             ]
+    //                     [{name: "Mark", value: ""}, {name: "David", value: ""}],
+    //                     [{name: "Rian", value: ""}, {name: "Lavender", value: ""}]
+    //                  ]
     //         },
     //         {
     //             owner: "Lavender",
     //             matrix: [
-    //                 [{name: "Mark", value: ""}, {name: "Rian", value: ""}],
-    //                 [{name: "David", value: ""}, {name: "Lavender", value: ""}]
-    //             ]
+    //                      [{name: "Mark", value: ""}, {name: "David", value: ""}],
+    //                     [{name: "Rian", value: ""}, {name: "Lavender", value: ""}]
+    //                 ]
     //         },
     //     ]
     // );
-    arras.addSeed("Lavender", "point_left");
+    arras.addSeed("Rian", "point_up");
 
     it("should do good things", () => {
-        console.log(arras.outlet(0, arras.getValsArray()));
+        // console.log(arras.outlet(0, arras.getValsArray()));
         console.log(arras.getMatrices().flatMap(m => m.matrix).flatMap(m => m));
         arras.bang();
-        console.log(arras.outlet(0, arras.getValsArray()));
+        // console.log(arras.outlet(0, arras.getValsArray()));
+        console.log(arras.getMatrices().flatMap(m => m.matrix).flatMap(m => m));
+        arras.bang();
+        // console.log(arras.outlet(0, arras.getValsArray()));
+        console.log(arras.getMatrices().flatMap(m => m.matrix).flatMap(m => m));
+        arras.bang();
+        // console.log(arras.outlet(0, arras.getValsArray()));
         console.log(arras.getMatrices().flatMap(m => m.matrix).flatMap(m => m));
     })
 })
@@ -232,6 +239,23 @@ describe("arras.createIdenticalMatrix()", () => {
     it("should create a matrix with 9 users", () => {
         const matrix = arras.createIdenticalMatrix(
             "David",
+            ["David", "Mark", "Rian", "Lavender", "Aidan", "Guillaume", "Camp Helper", "Ben", "Aleksi"],
+            3,
+            3
+        );
+
+        expect(matrix).toStrictEqual({
+            owner: "David",
+            matrix: [
+                [{name: "David", value: ""}, {name: "Mark", value: ""}, {name: "Rian", value: ""}],
+                [{name: "Lavender", value: ""}, {name: "Aidan", value: ""}, {name: "Guillaume", value: ""}],
+                [{name: "Camp Helper", value: ""}, {name: "Ben", value: ""}, {name: "Aleksi", value: ""}]
+            ]
+        });
+    })
+    it("should create a matrix with blah users", () => {
+        const matrix = arras.createMatrix(
+            "Lavender",
             ["David", "Mark", "Rian", "Lavender", "Aidan", "Guillaume", "Camp Helper", "Ben", "Aleksi"],
             3,
             3
